@@ -4,27 +4,22 @@ const User = require('../models/user.model')
 
 // Controlador para obtener todos los usuarios paginados
 const usersAllGET = async (req = request, res = response) => {
-
     const { page = 0, limit = 10 } = req.query
-    const query = { state: true }
+    const { rol } = req.user // Desestructuración del rol
 
-    // Metodo independiente - Traemos solo los usuarios con estado en true
-    /* const users = await User.find( query )
-        .skip( Number(page) )
-        .limit( Number(limit) ) */
-    
-    // Metodo independiente - Tenemos el total de todos los usuarios con estados en true
-    // const totalUsers = await User.countDocuments( query )  
+    // Construcción del filtro según el rol
+    const query = rol === 'ADMIN_ROLE'
+        ? {} // Admin ve todos los usuarios
+        : {
+            state: true,
+            rol: { $in: ['SALES_ROLE', 'USER_ROLE'] }
+        }
 
-    // Desestructuramos el array con el Promise para ejecutar 2 promesas al tiempo
-    const [ totalUsers, users ] = await Promise.all([
-        // Tenemos el total de todos los usuarios con estados en true
-        User.countDocuments( query ), 
-        
-        // Traemos solo los usuarios con estado en true
-        User.find( query ) 
-            .skip( Number(page) )
-            .limit( Number(limit) )
+    const [totalUsers, users] = await Promise.all([
+        User.countDocuments(query),
+        User.find(query)
+            .skip(Number(page))
+            .limit(Number(limit))
     ])
 
     res.json({
@@ -99,7 +94,7 @@ const userDELETE = async (req, res = response) => {
 
     if ( state ){
         res.json({
-            msj: `Usuario ${ name } eliminado con exito`
+            msj: `Usuario ${ name } fue eliminado con exito`
         })
     }else{
         res.json({

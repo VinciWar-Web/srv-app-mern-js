@@ -16,7 +16,7 @@ const {
     userPUT, 
     userDELETE 
 } = require('../controllers/user.controller')
-const { validateSalesOrUser } = require('../middleware/validate-user-user copy')
+const { validateSalesOrUser } = require('../middleware/validate-user-user')
 
 const router = Router()
 
