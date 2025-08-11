@@ -11,6 +11,8 @@ class Server {
 
         this.usersPatch = '/api/users'
         this.authPatch  = '/api/auth'
+        this.rolesPath  = '/api/roles'
+        this.permissionsPath  = '/api/permissions'
 
         // Conectar a base de datos
         this.connectDB()
@@ -39,6 +41,8 @@ class Server {
         // Directorio Publico
         this.app.use( this.authPatch, require('../routes/auth.router') )
         this.app.use( this.usersPatch, require('../routes/user.router') )
+        this.app.use(this.rolesPath, require('../routes/role.router'))
+        this.app.use(this.permissionsPath, require('../routes/permission.router'))
     }
 
     listen() {

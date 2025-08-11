@@ -1,14 +1,12 @@
 const { Router } = require('express')
 const { check } = require('express-validator')
 const { validatorRole, emailExists, userExistsByID } = require('../helpers/db-validators')
-
 const { 
     validateFields, 
     validateJWT, 
     isAdminRole, 
     validateAdminUser
 } = require('../middleware')
-
 const { 
     usersAllGET, 
     userGET,
