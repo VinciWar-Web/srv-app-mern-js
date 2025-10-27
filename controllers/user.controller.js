@@ -152,16 +152,18 @@ const userDELETE = async (req, res = response) => {
     try {
         const { id } = req.params
 
-        // Modelo para eliminar usuario fisicamente 
-        //const user = await User.findByIdAndDelete( id )
+        // Buscar el usuario primero para ver su estado actual
+        const user = await User.findById(id)
 
-        const { name, state } = await User.findByIdAndUpdate(id, { state: false }, { new: true })
-
-        if (state) {
-            res.json({ msj: `Usuario ${name} fue eliminado con éxito` })
-        } else {
-            res.json({ msj: `El usuario ${name}  ya fue eliminado anteriormente` })
+        // Verificar si ya está eliminado
+        if (!user.state) {
+            return res.json({ msj: `El usuario ${user.name} ya fue eliminado anteriormente` })
         }
+
+        // Eliminar (cambiar state a false)
+        await User.findByIdAndUpdate(id, { state: false })
+        
+        res.json({ msj: `Usuario ${user.name} fue eliminado con éxito` })
     } catch (error) {
         console.error(error)
         res.status(500).json({ msj: 'Error al eliminar el usuario' })
