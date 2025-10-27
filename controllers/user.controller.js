@@ -6,31 +6,52 @@ const Role = require('../models/role.model')
 
 // GET: Obtener todos los usuarios paginados
 const usersAllGET = async (req = request, res = response) => {
-    try {
-        const { page = 0, limit = 10 } = req.query
-        const { rol } = req.user // Desestructuración del rol
+  try {
+    // Query Parameters (opcionales)
+    const { page = 0, limit = 5 } = req.query
+    const { rol } = req.user
 
-        // Construcción del filtro según el rol
-        const query = rol === 'ADMIN_ROLE'
-            ? {} // Admin ve todos los usuarios
-            : { state: true, rol: { $in: ['SALES_ROLE', 'USER_ROLE'] } }
+    // Convertir a números
+    const pageNumber = Number(page)
+    const limitNumber = Number(limit)
+    const skip = pageNumber * limitNumber // Cálculo de documentos a omitir
 
-        const [totalUsers, users] = await Promise.all([
-            User.countDocuments(query),
-            User.find(query)
-                .skip(Number(page))
-                .limit(Number(limit))
-                .select('-password') // No mostrar contraseñas
-        ])
+    const query =
+      rol === 'ADMIN_ROLE'
+        ? {} // Admin ve todos los usuarios
+        : { state: true, rol: { $in: ['SALES_ROLE', 'USER_ROLE'] } } // Otros roles SALES_ROLE, USER_ROLE ven solo usuarios activos específicos
 
-        res.json({ 
-            totalUsers, 
-            users
-        })
-    } catch (error) {
-        console.error(error)
-        res.status(500).json({ msj: 'Error al obtener los usuarios' })
+    const totalUsers = await User.countDocuments(query) // Total de usuarios
+    const totalPages = Math.ceil(totalUsers / limitNumber) // Total de páginas
+
+    // Retorna respuesta vacía si la página no existe
+    if (pageNumber >= totalPages) {
+      return res.json({
+        totalUsers,
+        totalPages,
+        currentPage: pageNumber,
+        users: [],
+        message: 'No hay más usuarios disponibles',
+      })
     }
+
+    const users = await User.find(query)
+      .sort({ _id: 1 })    // Orden ascendente por ID
+      .skip(skip)          // Omite documentos según página
+      .limit(limitNumber)  // Limita resultados por página
+      .select('-password') // Excluye contraseñas de la respuesta
+
+    res.json({
+      totalUsers,
+      totalPages,
+      currentPage: pageNumber,
+      users,
+    })
+  } catch (error) {
+    console.error('=== ERROR ===')
+    console.error(error)
+    res.status(500).json({ msj: 'Error al obtener los usuarios' })
+  }
 }
 
 // GET: Obtener 1 usuario
